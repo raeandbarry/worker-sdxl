@@ -1,7 +1,6 @@
 import torch
 from diffusers import (
     StableDiffusionXLPipeline,
-    StableDiffusionXLImg2ImgPipeline,
     AutoencoderKL,
 )
 
@@ -25,29 +24,24 @@ def fetch_pretrained_model(model_class, model_name, **kwargs):
 
 def get_diffusion_pipelines():
     """
-    Fetches the Stable Diffusion XL pipelines from the HuggingFace model hub.
+    Fetches the diffusion pipeline from HuggingFace.
+    Using RealVisXL V4.0 — photorealistic SDXL fine-tune, no safety filter.
     """
     common_args = {
         "torch_dtype": torch.float16,
-        "variant": "fp16",
         "use_safetensors": True,
     }
 
     pipe = fetch_pretrained_model(
         StableDiffusionXLPipeline,
-        "stabilityai/stable-diffusion-xl-base-1.0",
+        "SG161222/RealVisXL_V4.0",
         **common_args,
     )
     vae = fetch_pretrained_model(
         AutoencoderKL, "madebyollin/sdxl-vae-fp16-fix", **{"torch_dtype": torch.float16}
     )
-    refiner = fetch_pretrained_model(
-        StableDiffusionXLImg2ImgPipeline,
-        "stabilityai/stable-diffusion-xl-refiner-1.0",
-        **common_args,
-    )
 
-    return pipe, refiner, vae
+    return pipe, None, vae
 
 
 if __name__ == "__main__":
