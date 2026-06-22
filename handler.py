@@ -38,7 +38,7 @@ class ModelHandler:
         vae = AutoencoderKL.from_pretrained(
             "madebyollin/sdxl-vae-fp16-fix",
             torch_dtype=torch.float16,
-            local_files_only=True,
+            local_files_only=False,
         )
         base_pipe = StableDiffusionXLPipeline.from_pretrained(
             "SG161222/RealVisXL_V4.0",
@@ -46,7 +46,7 @@ class ModelHandler:
             torch_dtype=torch.float16,
             use_safetensors=True,
             add_watermarker=False,
-            local_files_only=True,
+            local_files_only=False,
         ).to("cuda")
 
         base_pipe.enable_xformers_memory_efficient_attention()
