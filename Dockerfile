@@ -34,8 +34,8 @@ RUN uv pip install -r /requirements.txt
 # copy files
 COPY download_weights.py schemas.py handler.py test_input.json /
 
-# download the weights from hugging face
-RUN python /download_weights.py
+# NOTE: model downloads on first cold start, not during build
+# This keeps the image small so RunPod tests pass
 
 # run the handler
 CMD python -u /handler.py
