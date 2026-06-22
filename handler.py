@@ -1,4 +1,4 @@
-# Stillus RealVisXL worker
+# Stillus RealVisXL worker 
 import os
 import base64
 
