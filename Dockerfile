@@ -34,8 +34,10 @@ RUN uv pip install -r /requirements.txt
 # copy files
 COPY download_weights.py schemas.py handler.py test_input.json /
 
-# NOTE: model downloads on first cold start, not during build
-# This keeps the image small so RunPod tests pass
+# Download model weights during build — bakes them into the image (~13GB)
+# so workers start instantly without re-downloading on every cold start.
+# The handler uses local_files_only=True to use these cached weights.
+RUN python /download_weights.py
 
 # run the handler
 CMD python -u /handler.py
