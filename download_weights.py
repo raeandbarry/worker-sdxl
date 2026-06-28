@@ -1,53 +1,37 @@
-#!/usr/bin/env python3
-"""Download and cache all model weights during Docker build."""
+"""
+Pre-download all model weights during Docker build.
+This bakes them into the image so cold starts don't need to fetch anything.
+The handler uses local_files_only=True, so everything must be cached here.
+"""
 
-import torch
-from diffusers import StableDiffusionXLPipeline, AutoencoderKL
-from huggingface_hub import hf_hub_download
 import os
 
-print("[Download] Downloading RealVisXL V4.0...")
-vae = AutoencoderKL.from_pretrained(
-    "madebyollin/sdxl-vae-fp16-fix",
-    torch_dtype=torch.float16,
-)
+# Ensure HuggingFace cache is in a predictable location
+os.environ["HF_HOME"] = "/root/.cache/huggingface"
 
-pipe = StableDiffusionXLPipeline.from_pretrained(
-    "SG161222/RealVisXL_V4.0",
-    vae=vae,
-    torch_dtype=torch.float16,
-    use_safetensors=True,
-    add_watermarker=False,
-)
-print("[Download] ✓ RealVisXL V4.0 cached")
+from huggingface_hub import snapshot_download
 
-# Download IP-Adapter FaceID weights
-print("[Download] Downloading IP-Adapter FaceID for SDXL...")
+print("[Weights] Downloading SG161222/RealVisXL_V4.0...")
+snapshot_download("SG161222/RealVisXL_V4.0")
+
+print("[Weights] Downloading madebyollin/sdxl-vae-fp16-fix...")
+snapshot_download("madebyollin/sdxl-vae-fp16-fix")
+
+print("[Weights] Downloading h94/IP-Adapter-FaceID...")
+snapshot_download("h94/IP-Adapter-FaceID")
+
+# InsightFace buffalo_l model
+print("[Weights] Downloading InsightFace buffalo_l...")
 try:
-    hf_hub_download(
-        repo_id="h94/IP-Adapter-FaceID",
-        filename="ip-adapter-faceid_sdxl.bin",
-        local_dir_links=False,
-    )
-    print("[Download] ✓ IP-Adapter FaceID cached")
-except Exception as e:
-    print(f"[Download] IP-Adapter FaceID download failed: {e}")
-    print("[Download] Face consistency will be disabled — text description only")
-
-# Download InsightFace model for face embedding extraction
-print("[Download] Downloading InsightFace buffalo_l model...")
-try:
-    os.makedirs("/models/insightface/models", exist_ok=True)
     from insightface.app import FaceAnalysis
     app = FaceAnalysis(
         name="buffalo_l",
         root="/models/insightface",
         providers=["CPUExecutionProvider"],
     )
-    app.prepare(ctx_id=0, det_size=(640, 640))
-    print("[Download] ✓ InsightFace buffalo_l cached")
+    app.prepare(ctx_id=-1, det_size=(640, 640))
+    print("[Weights] InsightFace buffalo_l ready")
 except Exception as e:
-    print(f"[Download] InsightFace download failed: {e}")
-    print("[Download] Face embedding extraction will be disabled")
+    print(f"[Weights] InsightFace download failed (non-fatal): {e}")
 
-print("[Download] All downloads complete")
+print("[Weights] All models downloaded successfully")
