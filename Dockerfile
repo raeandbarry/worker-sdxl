@@ -36,6 +36,9 @@ RUN uv pip install -r /requirements.txt
 # install IP-Adapter FaceID dependencies
 RUN uv pip install insightface onnxruntime-gpu opencv-python-headless
 
+# Ensure HuggingFace cache is in a fixed location that persists into runtime
+ENV HF_HOME=/root/.cache/huggingface
+
 # copy files
 COPY download_weights.py schemas.py handler.py test_input.json /
 
